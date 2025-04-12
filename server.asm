@@ -1,93 +1,84 @@
-format ELF64 executable
+format ELF64 executable 3
 
-segment readable executable
+STDIN equ 0
+STDOUT equ 1
+STDERR = 2
+AF_INET = 2
+SOCK_STREAM = 1
 
-include 'share.inc'
+SYS_socket = 41
+SYS_exit = 60
+SYS_write = 1
 
-entry main
-main:
-  mov qword [currlen], 0
+macro exit retcode {
+  mov rax, SYS_exit
+  mov rdi, retcode
+  syscall
+}
+
+macro write fd, buf, len {
+  mov rax, SYS_write
+  mov rdi, fd
+  mov rsi, buf
+  mov rdx, len
+  syscall
+}
+
+macro close fd {
+  mov rax, 3
+  mov rdi, fd
+  syscall
+}
+
+macro socket family, type, prot {
+  mov rax, SYS_socket
+  mov rdi, family
+  mov rsi, type
+  mov rdx, prot
+  syscall
+}
+
+struc string [data] {
+  common
+  . db data
+  .len = $ - .
+}
+
+struc arr size {
+  repeat size
+  db 0
+  end repeat
+  .len = size
+}
+
+segment executable readable
+_start:
+  ; save stack pointer
   push rbp
   mov rbp, rsp
+  ; alloc some stack space. Stack grows down
+  sub rsp, 1
+  write STDOUT, open_sock_log_msg, open_sock_log_msg.len
   socket AF_INET, SOCK_STREAM, 0
-  ; running in gdb shows that the return value is in rax
-  ; and, rax is overwritten very quickly, so better save it somewhere.
+  mov r12, rax
+  cmp r12, -1
+  mov r13, open_sock_err_msg
+  mov r14, open_sock_err_msg.len
+  jg .noprob
+.error:
+  ; requirements: r12 return code, r13 message addr, r14 msg len
+  write STDOUT, r13, r14
+  jmp .cleanup
+.noprob:
+  mov r12, 0
+.cleanup:
+  ; requirements: r12 return code, r13 socket fd.
+  leave
+  exit r12
 
-  ; socket fd
-  mov qword [rbp], rax
-  ; log socket fd
-  ; need the add so that any number becomes its ASCII representation
-  add qword [rbp], '0'
-  ; logging
-  lea rsi, [sockfd_log_1]
-  mov rdx, qword [sockfd_log_1_len]
-  call fill_str_buff
-  lea rsi, [rbp]
-  mov rdx, 1
-  call fill_str_buff
-  mov byte [rbp+8], 10
-  lea rsi, [rbp+8]
-  mov rdx, 1
-  call fill_str_buff
-  flush stdout
+segment readable
+open_sock_log_msg string "Opening socket...",10
+open_sock_err_msg string "Error opening socket!!!",10
 
-  ; done with the string
-  ; undo the add called earlier
-  sub qword [rbp], '0'
-  
-  ; set socket option
-  mov qword [rbp+8], 1
-  lea r15, [rbp+8]
-  setsockopt qword [rbp], SOL_SOCKET, SO_REUSEPORT, r15, 8
-
-  ; bind socket
-  ; I will use the bytes from [rbp+8] to [rbp+15] as struct sockaddr.
-  ; sockaddr need the extra 8 padding bytes, so I'm actually using up to [rbp+23]
-  ; zero shits out first
-  mov qword [rbp+8], 0
-  mov qword [rbp+16], 0
-  ; sin_family
-  mov word [rbp+8], AF_INET
-  ; sin_port
-  ; htons(14619)
-  mov ax, 6969
-  rol ax, 8
-  mov word [rbp+10], ax
-  ; sin_addr.s_addr
-  ; htonl(INADDR_LOOPBACK)
-  mov eax, dword [addr]
-  mov dword [rbp+12], eax
-  lea r15, [rbp+8]
-  bind qword [rbp], r15, 16
-
-  listen qword [rbp], 2
-  accept qword [rbp], 0, 0
-  ; new socket fd
-  mov qword [rbp+24], rax
-  lea rsi, [socksend_1]
-  mov rdx, qword [socksend_1_len]
-  call fill_str_buff
-  lea r10, [strbuf]
-  add r10, qword [currlen]
-  read qword [rbp+24], r10, qword [maxlen]
-  flush stdout
-  ; write back a message
-  write qword [rbp+24], sockpingback_1, qword [sockpingback_1_len]
-
-  exit 0
-
-segment readable writeable
-sockfd_log_1 db "Socket fd: "
-sockfd_log_1_len dq $-sockfd_log_1
-socksend_1 db "Received: "
-socksend_1_len dq $-socksend_1
-sockpingback_1 db "Im boutta begone :(",10
-sockpingback_1_len dq $-sockpingback_1
-addr db 127,0,0,1
-; your general string buffer
-strbuf:
-repeat 4096
-db 0
-end repeat
-maxlen dq 4096
-currlen dq 0
+segment readable writable
+strbuf arr 4096
