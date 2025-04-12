@@ -2,9 +2,6 @@ format ELF64 executable 3
 
 include "./io.inc"
 
-STDIN equ 0
-STDOUT equ 1
-STDERR = 2
 AF_INET = 2
 SOCK_STREAM = 1
 
