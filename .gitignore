@@ -5,3 +5,4 @@ ref
 server
 !server.c
 *.o
+.gdb_history
