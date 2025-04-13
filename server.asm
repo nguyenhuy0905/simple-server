@@ -1,5 +1,7 @@
 format ELF64 executable 3
 
+include "./io.inc"
+
 STDIN equ 0
 STDOUT equ 1
 STDERR = 2
@@ -13,14 +15,6 @@ SYS_write = 1
 macro exit retcode {
   mov rax, SYS_exit
   mov rdi, retcode
-  syscall
-}
-
-macro write fd, buf, len {
-  mov rax, SYS_write
-  mov rdi, fd
-  mov rsi, buf
-  mov rdx, len
   syscall
 }
 

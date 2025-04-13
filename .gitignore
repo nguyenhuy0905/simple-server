@@ -4,3 +4,4 @@ ref
 !ref.c
 server
 !server.c
+*.o
