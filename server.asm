@@ -1,4 +1,4 @@
-format ELF64 executable 3
+format ELF64
 
 include "./io.inc"
 
@@ -7,7 +7,6 @@ SOCK_STREAM = 1
 
 SYS_socket = 41
 SYS_exit = 60
-SYS_write = 1
 
 macro exit retcode {
   mov rax, SYS_exit
@@ -42,8 +41,10 @@ struc arr size {
   .len = size
 }
 
-segment executable readable
+section '.text' executable
+public _start
 _start:
+  extrn printf
   ; save stack pointer
   push rbp
   mov rbp, rsp
@@ -64,12 +65,17 @@ _start:
   mov r12, 0
 .cleanup:
   ; requirements: r12 return code, r13 socket fd.
+  ; print random shits
+  mov rdi, STDOUT
+  mov rsi, printf_test_str
+  mov rdx, printf_test_str.len
+  call printf
   leave
   exit r12
 
-segment readable
+section '.data' writeable
+printf_test_str string "Hello\t World\n"
 open_sock_log_msg string "Opening socket...",10
 open_sock_err_msg string "Error opening socket!!!",10
 
-segment readable writable
 strbuf arr 4096
