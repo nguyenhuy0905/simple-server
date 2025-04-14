@@ -1,6 +1,7 @@
 format ELF64
 
 include "./io.inc"
+include "./buff.inc"
 
 AF_INET = 2
 SOCK_STREAM = 1
@@ -28,19 +29,6 @@ macro socket family, type, prot {
   syscall
 }
 
-struc string [data] {
-  common
-  . db data
-  .len = $ - .
-}
-
-struc arr size {
-  repeat size
-  db 0
-  end repeat
-  .len = size
-}
-
 section '.text' executable
 public _start
 _start:
@@ -49,7 +37,6 @@ _start:
   push rbp
   mov rbp, rsp
   ; alloc some stack space. Stack grows down
-  sub rsp, 1
   write STDOUT, open_sock_log_msg, open_sock_log_msg.len
   socket AF_INET, SOCK_STREAM, 0
   mov r12, rax
@@ -69,6 +56,9 @@ _start:
   mov rdi, STDOUT
   mov rsi, printf_test_str
   mov rdx, printf_test_str.len
+  ; push some va_args on
+  sub rsp, 8
+  mov qword [rbp-8], 10
   call printf
   leave
   exit r12
@@ -78,4 +68,4 @@ printf_test_str string "Hello\t World\n"
 open_sock_log_msg string "Opening socket...",10
 open_sock_err_msg string "Error opening socket!!!",10
 
-strbuf arr 4096
+strbuf arr 1024
