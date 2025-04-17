@@ -15,6 +15,7 @@ include "./buff.inc"
 
 section '.text' executable
 public uint32_to_str
+public int32_to_str
 ; converts an unsigned integer to a string
 ; arguments:
 ; edi: the number to convert
@@ -27,19 +28,24 @@ uint32_to_str:
   ; Imma just maintain stack frame to more easily debug.
   push rbp
   mov rbp, rsp
-  ; Technically I only need to sub 8. This aligns the stack.
+  ; Technically I only need to sub 16. This aligns the stack.
   ; Or so I think. Pretty sure I need to align to at least 8.
   ; not entirely sure about 16.
-  sub rsp, 16
+  sub rsp, 24
   mov qword [rbp-8], rsi
+  mov qword [rbp-16], rdx
   
   call uint32_to_str_recursive
   cmp rax, 0
-  jne .cleanup
+  jg .cleanup
   ; if rax == 0, aka, nothing is written with the recursive function, aka, we
-  ; need to write a 0.
+  ; need to write a 0. If, there's any space to write
+  mov rdx, qword [rbp-16]
+  cmp rdx, rax
+  jle .cleanup
   mov rsi, qword [rbp-8]
   mov byte [rsi], '0'
+  inc rax
 .cleanup:
   leave
   ret
@@ -55,6 +61,7 @@ uint32_to_str:
 int32_to_str:
   push rbp
   mov rbp, rsp
+  mov rax, 0
   cmp edi, 0
   jge .delegate
   ; only write if we can write
@@ -64,10 +71,13 @@ int32_to_str:
   neg edi
   inc rsi
   dec rdx
+  inc rax
 
 .delegate:
-  sub rsp, 8
+  sub rsp, 16
+  mov qword [rbp-8], rax
   call uint32_to_str
+  add rax, qword [rbp-8]
 .cleanup:
   leave
   ret
@@ -95,14 +105,9 @@ uint32_to_str_recursive:
   ret
 .continue:
   ; otherwise, do a division
-  mov edx, 0
-  mov eax, edi
-  mov r8d, 10
-  div r8d
-  ; eax: quotient, edx: remainder
-  ; put remainder to buffer
+  ; save rdx (aka, size) first
   ; define some labels beforehand
-  ; sizes of edi + rsi + rdx + rcx + edx. Just add extra padding in case
+  ; sizes of rsi + rdx + dl, plus some padding
   stack_alloc_space = 8 + 8 + 8 + 8
   sub rsp, stack_alloc_space
   offset = 8
@@ -110,35 +115,32 @@ uint32_to_str_recursive:
   offset = offset+8
   label t_siz qword at rbp-offset
   offset = offset+8
-  label t_cnt qword at rbp-offset
-  offset = offset+8
   label remainder byte at rbp-offset
-  remainder_off = offset
-  offset = offset+1
 
-  mov [t_buf], rsi
   mov [t_siz], rdx
-  mov [t_cnt], rcx
-  mov qword [rbp-remainder_off], 0
+
+  mov edx, 0
+  mov eax, edi
+  mov r8d, 10
+  div r8d
+  ; eax: quotient, edx: remainder
+  mov [t_buf], rsi
   mov [remainder], dl
+
   ; prepare to call the function recursively
   mov edi, eax
-  ; inc rsi
-  ; dec rdx
-  ; inc rcx
   call uint32_to_str_recursive
   ; recover the buffer, and find the position to write shits to
   mov rsi, [t_buf]
-  sub rdx, rax
+  mov rdx, [t_siz]
   ; let's write
+  ; only write if we can write
+  cmp rdx, rax
+  jl .cleanup
   mov dl, [remainder]
   add dl, '0'
-  ; only write if we can write
-  cmp rdx, 0
-  jle .cleanup
   mov byte [rsi+rax], dl
   inc rax
-  dec rdx
 .cleanup:
   leave
   ret
