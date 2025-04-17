@@ -30,6 +30,7 @@ _start:
   ; requirements: r12 return code, r13 socket fd.
   ; print random shits
   ; push some va_args on
+  push -20
   push -89
   push 69
   mov rdi, STDOUT
@@ -40,7 +41,7 @@ _start:
   exit r12
 
 section '.data' writeable
-printf_test_str string "Hello\t World %d%d\n"
+printf_test_str string "Hello\t World \n%d%d=%d\n"
 open_sock_log_msg string "Opening socket...",10
 open_sock_err_msg string "Error opening socket!!!",10
 
