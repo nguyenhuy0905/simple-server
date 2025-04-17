@@ -1,19 +1,34 @@
-all: server unit_test
+BUILD_DIR ?= build
+OBJ_DIR ?= ${BUILD_DIR}/obj
 
-unit_test: unit_test.o strfmt.o printf.o
-	ld $^ -o unit_test
+all: ${BUILD_DIR}/server ${BUILD_DIR}/unit_test
 
-server: server.o printf.o
-	ld server.o printf.o -o server
+botch:
+	find ${BUILD_DIR} -type f -exec rm '{}' ';'
+	find ${OBJ_DIR} -type f -exec rm '{}' ';'
 
-unit_test.o: unit_test.asm buff.inc io.inc
-	fasm unit_test.asm
+${BUILD_DIR}/unit_test: ${OBJ_DIR}/unit_test.o ${OBJ_DIR}/strfmt.o \
+	${OBJ_DIR}/printf.o
+	ld $^ -o $@
 
-server.o: server.asm io.inc buff.inc network.inc program.inc
-	fasm server.asm
+${BUILD_DIR}/server: build/obj/server.o build/obj/printf.o
+	ld $^ -o $@
 
-printf.o: printf.asm io.inc buff.inc
-	fasm printf.asm
+${OBJ_DIR}/unit_test.o: unit_test.asm buff.inc io.inc ${OBJ_DIR}
+	fasm unit_test.asm $@
 
-strfmt.o: strfmt.asm buff.inc
-	fasm strfmt.asm
+${OBJ_DIR}/server.o: server.asm io.inc buff.inc network.inc program.inc \
+	${OBJ_DIR}
+	fasm server.asm $@
+
+${OBJ_DIR}/printf.o: printf.asm io.inc buff.inc ${OBJ_DIR}
+	fasm printf.asm $@
+
+${OBJ_DIR}/strfmt.o: strfmt.asm buff.inc ${OBJ_DIR}
+	fasm strfmt.asm $@
+
+${OBJ_DIR}: ${BUILD_DIR}
+	mkdir -p $@
+
+${BUILD_DIR}:
+	mkdir -p $@

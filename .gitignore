@@ -1,8 +1,2 @@
-client
-!client.asm
-ref
-!ref.c
-server
-!server.c
-*.o
 .gdb_history
+build/*

@@ -34,6 +34,9 @@ uint32_to_str:
   sub rsp, 24
   mov qword [rbp-8], rsi
   mov qword [rbp-16], rdx
+  ; avoid a call when rdx is already 0
+  cmp rdx, 0
+  je .cleanup
   
   call uint32_to_str_recursive
   cmp rax, 0

@@ -55,7 +55,6 @@ uint32_to_str_out_of_space:
   je .cleanup
   write STDOUT, uint32_to_str_out_of_space_fail_1, uint32_to_str_out_of_space_fail_1.len
 .cleanup:
-  write STDOUT, strbuf, 1
   leave
   ret
 
@@ -137,8 +136,8 @@ int32_to_str_10_divisible:
   je .success1
   write STDOUT, int32_to_str_10_divisible_fail_1, int32_to_str_10_divisible_fail_1.len
 .success1:
-  ; comment this out to see if it prints 10
-  ; write STDOUT, strbuf, 2
+  ; comment this out to see if it prints -10
+  ; write STDOUT, strbuf, 3
   mov rax, 0
   leave
   ret
@@ -154,8 +153,8 @@ int32_to_str_10_not_divisible:
   je .success1
   write STDOUT, int32_to_str_10_not_divisible_fail_1, int32_to_str_10_not_divisible_fail_1.len
 .success1:
-  ; comment this out to see if it prints 128
-  ; write STDOUT, strbuf, 3
+  ; comment this out to see if it prints -128
+  ; write STDOUT, strbuf, 4
   mov rax, 0
   leave
   ret
