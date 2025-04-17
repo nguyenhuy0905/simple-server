@@ -2,32 +2,8 @@ format ELF64
 
 include "./io.inc"
 include "./buff.inc"
-
-AF_INET = 2
-SOCK_STREAM = 1
-
-SYS_socket = 41
-SYS_exit = 60
-
-macro exit retcode {
-  mov rax, SYS_exit
-  mov rdi, retcode
-  syscall
-}
-
-macro close fd {
-  mov rax, 3
-  mov rdi, fd
-  syscall
-}
-
-macro socket family, type, prot {
-  mov rax, SYS_socket
-  mov rdi, family
-  mov rsi, type
-  mov rdx, prot
-  syscall
-}
+include "./program.inc"
+include "./network.inc"
 
 section '.text' executable
 public _start
