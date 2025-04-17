@@ -30,6 +30,7 @@ NEWLINE = 10
 ; \n -> newline
 ; \t -> tab
 ; \\ -> backslash
+; %d -> number on va_arg list
 printf:
   push rbp
   mov rbp, rsp
