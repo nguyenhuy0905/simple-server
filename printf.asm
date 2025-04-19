@@ -10,6 +10,7 @@ extrn int32_to_str
 ; refer to any ASCII table out there
 TAB = 9
 NEWLINE = 10
+CARRIAGE = 13
 
 ; args:
 ; rdi: the output to print to.
@@ -30,6 +31,8 @@ NEWLINE = 10
 ; \n -> newline
 ; \t -> tab
 ; \\ -> backslash
+; \% -> percent
+; \r -> carriage
 ; %d -> number on va_arg list
 printf:
   push rbp
@@ -44,8 +47,6 @@ printf:
   ; imma just use rax, then rdi, rsi and rdx as temporary registers.
   sub rsp, 64
   ; push all the arguments passed in to the stack
-  ; TODO: I should have utilized some function-call-preserved registers.
-  ; that is, r12-r15 mostly. But, loading into memory saves me more headache.
   mov qword [rbp-8], rdi
   mov qword [rbp-16], rsi
   mov qword [rbp-24], rdx
@@ -123,6 +124,8 @@ macro bound_check label_if_ok, label_if_done {
   r10_match_char "t", .match_backslash_put_tab
   r10_match_char "n", .match_backslash_put_newline
   r10_match_char "\", .match_backslash_put_backslash
+  r10_match_char "%", .match_backslash_put_percent
+  r10_match_char "r", .match_backslash_put_carriage
   jmp .begin_put_str
 
   ; only useful in the context of match_backslash really
@@ -140,6 +143,10 @@ macro bound_check label_if_ok, label_if_done {
   put_char NEWLINE
 .match_backslash_put_backslash:
   put_char "\"
+.match_backslash_put_percent:
+  put_char "%"
+.match_backslash_put_carriage:
+  put_char CARRIAGE
 
 .match_percent:
   ; TODO: match_percent
