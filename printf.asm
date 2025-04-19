@@ -62,7 +62,7 @@ printf:
   retval equ qword [rbp-40]
 
   ; strbuf index. Only meaningful in the context of .loop_put_str.
-  mov qword [rbp-48], 1
+  mov qword [rbp-48], 0
   strbuf_idx equ qword [rbp-48]
   
   ; format buffer index. Only meaningful in the context of .loop_put_str.

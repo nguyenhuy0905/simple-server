@@ -19,3 +19,14 @@ macro close fd {
   syscall
 }
 
+; MUST BE LINKED WITH printf
+macro call_printf fd*, buf*, len*, [va_arg] {
+  reverse
+    match any, va_arg \{ push va_arg \}
+  common
+    mov rdi, fd
+    mov rsi, buf
+    mov rdx, len
+    call printf
+  forward pop rdi
+}
