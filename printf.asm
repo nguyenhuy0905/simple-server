@@ -25,6 +25,10 @@ CARRIAGE = 13
 ; second argument
 ; first argument
 ; LOWEST MEMORY ADDRESS
+;
+; note, this is NOT how you pass va_args in C.
+; here, we still have 5 more registers to pass in va_args.
+; until we use up all registers, we move on to pushing onto stack.
 ; for now, if you pass in too few va_arg, there's no bound-checking mechanism.
 ;
 ; supported parse symbols:
