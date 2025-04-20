@@ -17,14 +17,10 @@ _start:
   ; mov rdx, open_sock_log_msg.len
   ; call printf
   call_printf STDOUT, open_sock_log_msg, open_sock_log_msg.len
-  mov r12, rax
-  mov r13, open_sock_err_msg
-  mov r14, open_sock_err_msg.len
-  cmp r12, -1
+  cmp rax, -1
   jg .noprob
-.error:
-  ; requirements: r12 return code, r13 message addr, r14 msg len
-  call_printf STDOUT, r12, r13, r14
+  call_printf STDOUT, open_sock_err_msg, open_sock_err_msg.len, rax
+  mov r12, 1
   jmp .cleanup
 .noprob:
   mov r12, 0
@@ -35,9 +31,10 @@ _start:
   leave
   exit r12
 
-section '.data' writeable
+section '.data'
 printf_test_str string "Hello\t World \n%d%d=%d\n"
 open_sock_log_msg string "Opening socket...\n"
-open_sock_err_msg string "Error opening socket!!!\n"
+open_sock_err_msg string "Error opening socket (return %d)!!!\n"
 
+section '.bss' writeable
 strbuf arr 1024

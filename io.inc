@@ -21,12 +21,25 @@ macro close fd {
 
 ; MUST BE LINKED WITH printf
 macro call_printf fd*, buf*, len*, [va_arg] {
+  common
+    local .rspsub, subamount
+    subamount = 0
+    .rspsub:
   reverse
-    match any, va_arg \{ push va_arg \}
+      match any, va_arg \{\}
+      subamount = subamount + 8
+  common
+    if subamount mod 16 ; SysV ABI requiring 16-byte stack alignment.
+      sub rsp, 8
+      subamount = subamount + 8
+    end if
+  reverse
+      match any, va_arg \{ push va_arg \}
   common
     mov rdi, fd
     mov rsi, buf
     mov rdx, len
     call printf
-  forward pop rdi
+  common
+  add rsp, subamount
 }
