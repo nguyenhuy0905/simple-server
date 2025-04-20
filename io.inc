@@ -20,11 +20,12 @@ macro close fd {
 }
 
 ; MUST BE LINKED WITH printf
-macro call_printf fd*, buf*, len*, [va_arg] {
+macro call_printf fd*, buf*, len*, va_arg_1, va_arg_2, va_arg_3, [va_arg] {
   common
-    local .rspsub, subamount
+    local subamount
     subamount = 0
-    .rspsub:
+  reverse
+    ; prep to allocate some stack space
     match any, va_arg \{
       subamount = subamount + 8
     \}
@@ -33,6 +34,9 @@ macro call_printf fd*, buf*, len*, [va_arg] {
       sub rsp, 8
       subamount = subamount + 8
     end if
+    match a3, va_arg_3 \{mov r9, va_arg_3\}
+    match a2, va_arg_2 \{mov r8, va_arg_2\}
+    match a1, va_arg_1 \{mov rcx, va_arg_1\}
   reverse
       match any, va_arg \{ push va_arg \}
   common

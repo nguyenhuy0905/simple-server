@@ -22,9 +22,12 @@ CARRIAGE = 13
 ; HIGHEST MEMORY ADDRESS
 ; last argument
 ; ...
-; second argument
-; first argument
+; fifth argument
+; fourth argument
 ; LOWEST MEMORY ADDRESS
+; r9 - third argument
+; r8 - second argument
+; rcx - first argument
 ;
 ; note, this is NOT how you pass va_args in C.
 ; here, we still have 5 more registers to pass in va_args.
@@ -48,6 +51,9 @@ printf:
   label .strbuf_idx qword at rbp-48
   ; buf_idx equ qword [rbp-56]
   label .buf_idx qword at rbp-56
+  label .va_arg_3 qword at rbp-64
+  label .va_arg_2 qword at rbp-72
+  label .va_arg_1 qword at rbp-80
 
   push rbp
   mov rbp, rsp
@@ -59,15 +65,18 @@ printf:
   ; and besides, function calls inside here may very well use these registers,
   ; since they are not guaranteed to preserve
   ; imma just use rax, then rdi, rsi and rdx as temporary registers.
-  sub rsp, 64
+  sub rsp, 80
   ; push all the arguments passed in to the stack
   mov [.t_fd], rdi
   mov [.t_buf], rsi
   mov [.t_buflen], rdx
   ; local variables
-  lea rax, [rbp+16]
+  lea rax, [rbp-80]
   mov [.va_arg_ptr], rax
   mov [.retval], 0
+  mov [.va_arg_1], rcx
+  mov [.va_arg_2], r8
+  mov [.va_arg_3], r9
 
   ; strbuf index. Only meaningful in the context of .loop_put_str.
   mov [.strbuf_idx], 0
@@ -156,6 +165,25 @@ macro bound_check label_if_ok, label_if_done {
   
   purge put_char
 
+  macro put_va_arg reg, opsize {
+    local .point_to_stack, .inc, .cont
+    mov rax, [.va_arg_ptr]
+    mov reg, opsize [rax]
+    ; va_arg_3 at rbp-64, so when we're done with that va_arg, jump to point
+    ; on stack.
+    lea rsi, [rbp-64]
+    cmp rax, rsi
+    jl .inc
+    lea rsi, [rbp+16]
+    cmp rax, rsi
+    jge .inc
+    .point_to_stack:
+    lea rax, [rbp+8]
+    mov [.va_arg_ptr], rax
+    .inc:
+    add [.va_arg_ptr], 8
+    .cont:
+  }
 .match_percent:
   ; TODO: match_percent
   bound_check .match_percent_peek_next, .end_match
@@ -166,11 +194,10 @@ macro bound_check label_if_ok, label_if_done {
   ; prepare to call the function
   mov [.t_buf], rsi
   ; get next arg in va_list 
-  mov rax, [.va_arg_ptr]
-  mov edi, dword [rax]
-  ; I'm lazy.
-  ; technically I can save space by only pushing 4 bytes on here.
-  add [.va_arg_ptr], 8
+  ;mov rax, [.va_arg_ptr]
+  ;mov edi, dword [rax]
+  ;add [.va_arg_ptr], 8
+  put_va_arg edi, dword
   mov rax, [.strbuf_idx]
   lea rsi, [strbuf+rax]
   mov rdx, strbuf.len
