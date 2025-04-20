@@ -28,7 +28,6 @@ _start:
   ; requirements: r12 return code, r13 socket fd.
   ; print random shits
   call_printf STDOUT, printf_test_str, printf_test_str.len, 69, -89, -20
-  leave
   exit r12
 
 section '.data'
