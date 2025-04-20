@@ -10,16 +10,20 @@ static const size_t strsize = sizeof(str_to_print);
 static char fmt_buf[1024] = {0};
 static const size_t fmt_buf_size = sizeof(fmt_buf);
 
-void _start() {
-  size_t retcode = 0;
-  asm_printf(1, str_to_print, strsize, 20, 4, 2025);
-  retcode =
-      asm_sprintf(fmt_buf, fmt_buf_size, str_to_print, strsize, 20, 4, 2025);
-  asm_printf(1, fmt_buf, retcode);
+[[noreturn]] void nolibc_exit(int retcode) {
   __asm__("mov $60, %%rax\n\t"
           "mov %[retcode], %%rdi\n\t"
           "syscall\n\t"
           :
-          : [retcode] "r"(retcode)
+          : [retcode] "r"((size_t)retcode)
           : "rax");
+  unreachable();
+}
+
+void _start() {
+  asm_printf(1, str_to_print, strsize, 20, 4, 2025);
+  int putsiz =
+      asm_sprintf(fmt_buf, fmt_buf_size, str_to_print, strsize, 20, 4, 2025);
+  asm_printf(1, fmt_buf, putsiz);
+  nolibc_exit(0);
 }
