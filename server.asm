@@ -8,11 +8,11 @@ include "./network.inc"
 section '.text' executable
 public _start
 _start:
-  extrn printf
+  extrn asm_printf
   ; mov rdi, STDOUT
   ; mov rsi, open_sock_log_msg
   ; mov rdx, open_sock_log_msg.len
-  ; call printf
+  ; call asm_printf
   call_printf STDOUT, open_sock_log_msg, open_sock_log_msg.len
   cmp rax, -1
   jg .noprob

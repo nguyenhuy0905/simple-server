@@ -4,7 +4,7 @@ include "./io.inc"
 include "./buff.inc"
 
 section '.text' executable
-public printf
+public asm_printf
 extrn int32_to_str
 
 ; refer to any ASCII table out there
@@ -41,7 +41,7 @@ CARRIAGE = 13
 ; \% -> percent
 ; \r -> carriage
 ; %d -> number on va_arg list
-printf:
+asm_printf:
   ; Some macro to refer to memory positions more easily
   label .t_fd qword at rbp-8
   label .t_buf qword at rbp-16
@@ -246,7 +246,7 @@ macro bound_check label_if_ok, label_if_done {
 ; \% -> percent
 ; \r -> carriage
 ; %d -> number on va_arg list
-sprintf:
+asm_sprintf:
   ; save stack frame
   push rbp
   mov rbp, rsp

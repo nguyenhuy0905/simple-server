@@ -19,7 +19,7 @@ macro close fd {
   syscall
 }
 
-; MUST BE LINKED WITH printf
+; MUST BE LINKED WITH asm_printf
 macro call_printf fd*, buf*, len*, va_arg_1, va_arg_2, va_arg_3, [va_arg] {
   common
     local subamount
@@ -43,7 +43,7 @@ macro call_printf fd*, buf*, len*, va_arg_1, va_arg_2, va_arg_3, [va_arg] {
     mov rdi, fd
     mov rsi, buf
     mov rdx, len
-    call printf
+    call asm_printf
   common
     if subamount > 0
       add rsp, subamount
