@@ -25,9 +25,9 @@ macro call_printf fd*, buf*, len*, [va_arg] {
     local .rspsub, subamount
     subamount = 0
     .rspsub:
-  reverse
-      match any, va_arg \{\}
+    match any, va_arg \{
       subamount = subamount + 8
+    \}
   common
     if subamount mod 16 ; SysV ABI requiring 16-byte stack alignment.
       sub rsp, 8
@@ -41,5 +41,7 @@ macro call_printf fd*, buf*, len*, [va_arg] {
     mov rdx, len
     call printf
   common
-  add rsp, subamount
+    if subamount > 0
+      add rsp, subamount
+    end if
 }
