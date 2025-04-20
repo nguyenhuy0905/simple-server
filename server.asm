@@ -9,9 +9,6 @@ section '.text' executable
 public _start
 _start:
   extrn printf
-  ; save stack pointer
-  push rbp
-  mov rbp, rsp
   ; mov rdi, STDOUT
   ; mov rsi, open_sock_log_msg
   ; mov rdx, open_sock_log_msg.len
