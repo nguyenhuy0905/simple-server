@@ -20,7 +20,7 @@ ${BUILD_DIR}/capi: ${OBJ_DIR}/capi.o ${OBJ_DIR}/printf.o ${OBJ_DIR}/strfmt.o
 	ld $^ -o $@
 
 ${OBJ_DIR}/capi.o: capi.c ${OBJ_DIR}
-	gcc -c capi.c -o $@
+	gcc -c capi.c -std=c23 -nostdlib -o $@
 
 ${BUILD_DIR}/unit_test: ${OBJ_DIR}/unit_test.o ${OBJ_DIR}/strfmt.o \
 	${OBJ_DIR}/printf.o
