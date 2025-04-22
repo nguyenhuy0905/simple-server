@@ -77,10 +77,18 @@ int32_to_str:
   inc rax
 
 .delegate:
+  ; if number is already 0, don't waste time calling function
+  cmp edi, 0
+  je .zero
+  ; otherwise,
   sub rsp, 16
   mov qword [rbp-8], rax
   call uint32_to_str_recursive
   add rax, qword [rbp-8]
+  jmp .cleanup
+.zero:
+  mov byte [rsi], '0'
+  inc rax
 .cleanup:
   leave
   ret
