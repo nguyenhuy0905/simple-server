@@ -91,7 +91,7 @@ asm_printf:
   mov r9, [.buf_idx]
   mov rdx, [.t_buflen]
   cmp r9, rdx
-  je .end_loop_put_str
+  jge .end_loop_put_str
   ; while-body
   mov rsi, [.t_buf]
   cmp byte [rsi+r9], "\"
@@ -102,7 +102,7 @@ asm_printf:
   
 .begin_put_str:
   c_to_put equ cl
-  mov rsi, [.t_buf]
+  ; mov rsi, [.t_buf]
   mov c_to_put, byte [rsi+r9]
   mov rax, [.strbuf_idx]
   mov byte [strbuf+rax], c_to_put
@@ -121,17 +121,18 @@ macro bound_check label_if_ok, label_if_done {
   mov rdx, [.t_buflen]
   ; comparison
   lea r8, [rsi+r9+1]
-  cmp r8, [rsi+rdx]
-  ; if the backslash is the last char, do nothing.
-  ; otherwise, look to the next char:
-  ; - if next char is t, put 9 to strbuf.
-  ; - if next char is n, put 10 to strbuf.
+  lea rax, [rsi+rdx]
+  cmp r8, rax
   jl label_if_ok
   jmp label_if_done
 }
 .match_backslash:
   ; at this point, r9, rsi and rdx should be loaded with buf_idx, .t_buf and
   ; .t_buflen respectively
+  ; if the backslash is the last char, do nothing.
+  ; otherwise, look to the next char:
+  ; - if next char is t, put 9 to strbuf.
+  ; - if next char is n, put 10 to strbuf.
   bound_check .match_backslash_peek_next, .end_match
 .match_backslash_peek_next:
   ; use r8 here
@@ -296,7 +297,7 @@ asm_sprintf:
   mov r9, [.buf_idx]
   mov rdx, [.t_fmt_buflen]
   cmp r9, rdx
-  je .end_loop_put_str
+  jge .end_loop_put_str
   ; while-body
   mov rsi, [.t_fmt_buf]
   cmp byte [rsi+r9], "\"
@@ -327,7 +328,8 @@ macro bound_check label_if_ok, label_if_done {
   mov rdx, [.t_fmt_buflen]
   ; comparison
   lea r8, [rsi+r9+1]
-  cmp r8, [rsi+rdx]
+  lea rax, [rsi+rdx]
+  cmp r8, rax
   ; if the backslash is the last char, do nothing.
   ; otherwise, look to the next char:
   ; - if next char is t, put 9 to strbuf.

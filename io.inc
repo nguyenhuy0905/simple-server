@@ -30,7 +30,7 @@ macro call_printf fd*, buf*, len*, va_arg_1, va_arg_2, va_arg_3, [va_arg] {
       subamount = subamount + 8
     \}
   common
-    if subamount mod 16 ; SysV ABI requiring 16-byte stack alignment.
+    if ~ subamount mod 16 ; SysV ABI requiring 16-byte stack alignment.
       sub rsp, 8
       subamount = subamount + 8
     end if

@@ -79,7 +79,7 @@ int32_to_str:
 .delegate:
   sub rsp, 16
   mov qword [rbp-8], rax
-  call uint32_to_str
+  call uint32_to_str_recursive
   add rax, qword [rbp-8]
 .cleanup:
   leave
@@ -96,23 +96,7 @@ int32_to_str:
 ; return:
 ; rax: number of bytes put to the buffer
 uint32_to_str_recursive:
-  push rbp
-  mov rbp, rsp
-  ; if nothing happens, return value is 0
-  mov rax, 0
-  ; if number to convert is already 0, do nothing
-  cmp edi, 0
-  ; somehow it cannot find label .cleanup here
-  jne .continue
-  leave
-  ret
-.continue:
-  ; otherwise, do a division
-  ; save rdx (aka, size) first
-  ; define some labels beforehand
-  ; sizes of rsi + rdx + dl, plus some padding
-  stack_alloc_space = 8 + 8 + 8 + 8
-  sub rsp, stack_alloc_space
+  stack_alloc_space = 8 + 8 + 8 + 8 + 8
   offset = 8
   label t_buf qword at rbp-offset
   offset = offset+8
@@ -120,18 +104,35 @@ uint32_to_str_recursive:
   offset = offset+8
   label remainder byte at rbp-offset
 
+  push rbp
+  mov rbp, rsp
+  ; if nothing happens, return value is 0
+  mov rax, 0
+  ; if number to convert is already 0, do nothing
+  cmp edi, 0
+  ; somehow it cannot find label .cleanup here
+  je .cleanup
+.continue:
+  ; otherwise, do a division
+  ; save rdx (aka, size) first
+  ; define some labels beforehand
+  ; sizes of rsi + rdx + dl, plus some padding
+  sub rsp, stack_alloc_space
+
   mov [t_siz], rdx
+  mov [t_buf], rsi
 
   mov edx, 0
   mov eax, edi
   mov r8d, 10
   div r8d
   ; eax: quotient, edx: remainder
-  mov [t_buf], rsi
   mov [remainder], dl
 
   ; prepare to call the function recursively
   mov edi, eax
+  ; mov rsi, [t_buf]
+  mov rdx, [t_siz]
   call uint32_to_str_recursive
   ; recover the buffer, and find the position to write shits to
   mov rsi, [t_buf]
