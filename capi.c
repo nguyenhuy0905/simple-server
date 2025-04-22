@@ -21,9 +21,9 @@ constexpr size_t fmt_buf_size = sizeof(fmt_buf);
 }
 
 void _start() {
-  asm_printf(1, str_to_print, strsize, 20, 4, 2025);
+  asm_printf(1, str_to_print, strsize-1, 200000, 40000, 2025);
   int putsiz =
-      asm_sprintf(fmt_buf, fmt_buf_size, str_to_print, strsize, 20, 4, 2025);
+      asm_sprintf(fmt_buf, fmt_buf_size, str_to_print, strsize-1, 20, 4, 2025);
   asm_printf(1, fmt_buf, putsiz);
   nolibc_exit(0);
 }
