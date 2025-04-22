@@ -17,3 +17,15 @@ macro bind fd, addr, addrlen {
   mov rdx, addrlen
   syscall
 }
+
+; addr and port will be reverse-byte-ordered.
+struc sockaddr_in family*, port*, b1*, b2*, b3*, b4* {
+  local nbo_port
+  common
+  nbo_port = port / 256
+  nbo_port = nbo_port + (port mod 256) * 256
+  .sin_family dw family
+  .sin_port dw nbo_port
+  .s_addr db b4, b3, b2, b1
+  .padding dq 0
+}
