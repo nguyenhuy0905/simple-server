@@ -44,6 +44,7 @@ CARRIAGE = 13
 ; \% -> percent
 ; \r -> carriage
 ; %d -> number on va_arg list
+; %s -> the buffer on va_arg list, followed by its length on va_arg list
 asm_printf:
   ; Some macro to refer to memory positions more easily
   label .t_fd qword at rbp-8
@@ -127,8 +128,6 @@ macro bound_check label_if_ok, label_if_done {
   jmp label_if_done
 }
 .match_backslash:
-  ; at this point, r9, rsi and rdx should be loaded with buf_idx, .t_buf and
-  ; .t_buflen respectively
   ; if the backslash is the last char, do nothing.
   ; otherwise, look to the next char:
   ; - if next char is t, put 9 to strbuf.
@@ -193,6 +192,7 @@ macro bound_check label_if_ok, label_if_done {
   bound_check .match_percent_peek_next, .end_match
 .match_percent_peek_next:
   r8_match_char "d", .match_percent_put_int
+  r8_match_char "s", .match_percent_put_str
   jmp .begin_put_str
 .match_percent_put_int:
   ; prepare to call the function
@@ -211,6 +211,35 @@ macro bound_check label_if_ok, label_if_done {
   add [.retval], rax
   add [.strbuf_idx], rax
   inc [.buf_idx]
+  jmp .end_put_str
+
+.match_percent_put_str:
+  ; get string-to-put buffer and its length
+  put_va_arg r8, qword
+  put_va_arg r9, qword
+  mov rsi, strbuf
+  add rsi, qword [.strbuf_idx]
+  ;mov rdx, 0
+  mov rax, 0
+.match_percent_put_str_loop:
+  ; only put stuff if we can still put
+  cmp rax, r9
+  je .end_match_percent_put_str_loop
+  ; do some bound-checking before putting stuff on strbuf
+  sub rsi, strbuf
+  cmp rsi, strbuf.len
+  je .end_match_percent_put_str_loop
+  ; put stuff
+  add rsi, strbuf
+  mov dl, byte [r8+rax]
+  mov byte [rsi], dl
+  inc rax
+  inc rsi
+  inc [.strbuf_idx]
+  inc [.retval]
+  jmp .match_percent_put_str_loop
+.end_match_percent_put_str_loop:
+  inc qword [.buf_idx]
   jmp .end_put_str
 
   purge bound_check
@@ -238,10 +267,7 @@ macro bound_check label_if_ok, label_if_done {
 ; first argument
 ; LOWEST MEMORY ADDRESS
 ;
-; note, this is NOT how you pass va_args in C.
-; here, we still have 5 more registers to pass in va_args.
-; until we use up all registers, we move on to pushing onto stack.
-; for now, if you pass in too few va_arg, there's no bound-checking mechanism.
+; can be called from C.
 ;
 ; supported parse symbols:
 ; \n -> newline
@@ -250,6 +276,7 @@ macro bound_check label_if_ok, label_if_done {
 ; \% -> percent
 ; \r -> carriage
 ; %d -> number on va_arg list
+; %s -> the buffer on va_arg list, followed by its length on va_arg list
 asm_sprintf:
   ; Some macro to refer to memory positions more easily
   label .t_put_buf qword at rbp-8
@@ -401,6 +428,7 @@ macro bound_check label_if_ok, label_if_done {
   bound_check .match_percent_peek_next, .end_match
 .match_percent_peek_next:
   r8_match_char "d", .match_percent_put_int
+  r8_match_char "s", .match_percent_put_str
   jmp .begin_put_str
 .match_percent_put_int:
   ; prepare to call the function
@@ -420,6 +448,35 @@ macro bound_check label_if_ok, label_if_done {
   add [.retval], rax
   add [.putbuf_idx], rax
   inc [.buf_idx]
+  jmp .end_put_str
+
+.match_percent_put_str:
+  ; get string-to-put buffer and its length
+  put_va_arg r8, qword
+  put_va_arg r9, qword
+  mov rsi, qword [.t_put_buf] 
+  add rsi, qword [.putbuf_idx]
+  ;mov rdx, 0
+  mov rax, 0
+.match_percent_put_str_loop:
+  ; only put stuff if we can still put
+  cmp rax, r9
+  je .end_match_percent_put_str_loop
+  ; do some bound-checking before putting stuff on put_buf
+  sub rsi, [.t_put_buf]
+  cmp rsi, [.t_put_buflen]
+  je .end_match_percent_put_str_loop
+  ; put stuff
+  add rsi, [.t_put_buf]
+  mov dl, byte [r8+rax]
+  mov byte [rsi], dl
+  inc rax
+  inc rsi
+  inc [.putbuf_idx]
+  inc [.retval]
+  jmp .match_percent_put_str_loop
+.end_match_percent_put_str_loop:
+  inc qword [.buf_idx]
   jmp .end_put_str
 
   purge bound_check
