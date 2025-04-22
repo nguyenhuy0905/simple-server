@@ -20,7 +20,7 @@ int main(/*int argc, char *argv[]*/) {
   printf("sizeof(sin_family) = %lu\n", sizeof(sock_in.sin_family));
   printf("sizeof(sin_port) = %lu\n", sizeof(sock_in.sin_port));
   printf("sizeof(sin_addr.s_addr) = %lu\n", sizeof(sock_in.sin_addr.s_addr));
-  printf("htons(6969) = %d\n", htons(1024));
+  printf("htons(6969) = %d\n", htons(6969));
   printf("manual math, htons: %d\n", ((1024 / 256)) + ((1024 % 256) << 8));
 
   // checking how network-byte-order works
