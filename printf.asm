@@ -188,7 +188,6 @@ macro bound_check label_if_ok, label_if_done {
     .cont:
   }
 .match_percent:
-  ; TODO: match_percent
   bound_check .match_percent_peek_next, .end_match
 .match_percent_peek_next:
   r8_match_char "d", .match_percent_put_int
@@ -424,7 +423,6 @@ macro bound_check label_if_ok, label_if_done {
     .cont:
   }
 .match_percent:
-  ; TODO: match_percent
   bound_check .match_percent_peek_next, .end_match
 .match_percent_peek_next:
   r8_match_char "d", .match_percent_put_int
