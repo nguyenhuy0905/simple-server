@@ -39,6 +39,13 @@ _start:
   mov [sock], rax
   cmp [sock], -1
   je .cleanup
+  
+  ; dunno why the macro crashes here.
+  mov rcx, [sock]
+  mov rdi, STDOUT
+  mov rsi, open_sock_success_msg
+  mov rdx, open_sock_success_msg.len
+  call asm_printf
 
   mov r12, 0
 .cleanup:
@@ -55,6 +62,7 @@ _start:
 section '.data'
 printf_test_str string "Hello\t World \n%d%d=%d\n%d+%d=%d\n"
 open_sock_log_msg string "Opening socket...\n"
+open_sock_success_msg string "Socket %d opened successfully\n"
 open_sock_err_msg string "Error opening socket (return %d)!!!\n"
 server_sockaddr sockaddr_in AF_INET, 6969, 127, 0, 0, 1
 sockaddr_fmt string ".sin_port = %d\n.s_addr = %d.%d.%d.%d\n"
