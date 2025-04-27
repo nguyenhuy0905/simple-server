@@ -9,17 +9,15 @@ section '.text' executable
 public _start
 _start:
   extrn asm_printf
+  label sock qword at rbp-8
+
+  mov rbp, rsp
+  sub rsp, 8
   ; mov rdi, STDOUT
   ; mov rsi, open_sock_log_msg
   ; mov rdx, open_sock_log_msg.len
   ; call asm_printf
   call_printf STDOUT, open_sock_log_msg, open_sock_log_msg.len
-  cmp rax, -1
-  jg .noprob
-  call_printf STDOUT, open_sock_err_msg, open_sock_err_msg.len, rax
-  mov r12, 1
-  jmp .cleanup
-.noprob:
   ; This is a manual call compared to the nice macro call_printf
   xor rax, rax
   mov al, byte [server_sockaddr.s_addr+3]
@@ -36,10 +34,18 @@ _start:
   mov rsi, sockaddr_fmt
   mov rdx, sockaddr_fmt.len
   call asm_printf
-  pop rax
-  pop rax
+
+  socket AF_INET, SOCK_STREAM, 0
+  mov [sock], rax
+  cmp [sock], -1
+  je .cleanup
+
   mov r12, 0
 .cleanup:
+  cmp [sock], -1
+  je @f
+  close rax
+@@:
   ; requirements: r12 return code, r13 socket fd.
   ; print random shits
   call_printf STDOUT, printf_test_str, printf_test_str.len, \
