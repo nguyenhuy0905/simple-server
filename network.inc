@@ -2,6 +2,7 @@ AF_INET = 2
 SOCK_STREAM = 1
 SYS_socket = 41
 SYS_bind = 49
+SYS_listen = 50
 
 macro socket family, type, prot {
   mov rax, SYS_socket
@@ -13,8 +14,16 @@ macro socket family, type, prot {
 
 macro bind fd, addr, addrlen {
   mov rax, SYS_bind
-  mov rdi, addr
+  mov rdi, fd
+  mov rsi, addr
   mov rdx, addrlen
+  syscall
+}
+
+macro listen fd, backlog {
+  mov rax, SYS_listen
+  mov rdi, fd
+  mov rsi, backlog
   syscall
 }
 
