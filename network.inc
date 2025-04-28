@@ -18,7 +18,7 @@ macro bind fd, addr, addrlen {
   syscall
 }
 
-; addr and port will be reverse-byte-ordered.
+; port will be reverse-byte-ordered.
 struc sockaddr_in family*, port*, b1*, b2*, b3*, b4* {
   local nbo_port
   common
@@ -26,6 +26,7 @@ struc sockaddr_in family*, port*, b1*, b2*, b3*, b4* {
   nbo_port = nbo_port + (port mod 256) * 256
   .sin_family dw family
   .sin_port dw nbo_port
-  .s_addr db b4, b3, b2, b1
+  .s_addr db b1, b2, b3, b4
   .padding dq 0
+  .len = $ - .sin_family
 }
