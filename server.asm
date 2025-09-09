@@ -73,6 +73,13 @@ _start:
   accept [sock], 0, 0
   cmp rax, -1
   jne @f
+  mov rdi, STDOUT
+  mov rsi, accept_sock_err_msg
+  mov rdx, accept_sock_err_msg.len
+  mov rcx, [sock]
+  call asm_printf
+  mov r12, -1
+  jmp .cleanup
 
 @@:
   mov [newsock], rax
@@ -98,7 +105,7 @@ server_sockaddr sockaddr_in AF_INET, 6969, 127, 0, 0, 1
 sockaddr_fmt string ".sin_port = %d\n.s_addr = %d.%d.%d.%d\n"
 listen_sock_err_msg string "Error listening socket %d\n"
 listen_sock_success_msg string "Listening on socket %d\n"
-accept_sock_err_msg string "Error accepting socket\n"
+accept_sock_err_msg string "Error accepting socket pair of %d\n"
 
 section '.bss' writeable
 strbuf arr 1024
