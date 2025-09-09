@@ -3,6 +3,7 @@ SOCK_STREAM = 1
 SYS_socket = 41
 SYS_bind = 49
 SYS_listen = 50
+SYS_accept = 43
 
 macro socket family, type, prot {
   mov rax, SYS_socket
@@ -25,6 +26,14 @@ macro listen fd, backlog {
   mov rdi, fd
   mov rsi, backlog
   syscall
+}
+
+macro accept fd, addr, addrlen {
+        mov rax, SYS_accept
+        mov rdi, fd
+        mov rsi, addr
+        mov rdx, addrlen
+        syscall
 }
 
 ; port will be reverse-byte-ordered.
