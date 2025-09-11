@@ -43,5 +43,9 @@ int main(/*int argc, char *argv[]*/) {
   int lowest = (addr.s_addr - sum_highest);
   printf("8 lowest highest bits: %d\n", lowest);
 
+  printf("SHUT_RD: %d\n", SHUT_RD);
+  printf("SHUT_WR: %d\n", SHUT_WR);
+  printf("SHUT_RDWR: %d\n", SHUT_RDWR);
+
   return EXIT_SUCCESS;
 }

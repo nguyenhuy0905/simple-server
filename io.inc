@@ -2,8 +2,18 @@ STDIN equ 0
 STDOUT equ 1
 STDERR equ 2
 
+SYS_read = 0
 SYS_write = 1
+SYS_open = 2
 SYS_close = 3
+
+macro read fd, buf, len {
+  mov rax, SYS_read
+  mov rdi, fd
+  mov rsi, buf
+  mov rdx, len
+  syscall
+}
 
 macro write fd, buf, len {
   mov rax, SYS_write

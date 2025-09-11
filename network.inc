@@ -4,6 +4,12 @@ SYS_socket = 41
 SYS_bind = 49
 SYS_listen = 50
 SYS_accept = 43
+SYS_connect = 42
+SYS_shutdown = 48
+
+SHUT_RD = 0
+SHUT_WR = 1
+SHUT_RDWR = 2
 
 macro socket family, type, prot {
   mov rax, SYS_socket
@@ -29,11 +35,19 @@ macro listen fd, backlog {
 }
 
 macro accept fd, addr, addrlen {
-        mov rax, SYS_accept
-        mov rdi, fd
-        mov rsi, addr
-        mov rdx, addrlen
-        syscall
+  mov rax, SYS_accept
+  mov rdi, fd
+  mov rsi, addr
+  mov rdx, addrlen
+  syscall
+}
+
+macro connect fd, addr, addrlen {
+  mov rax, SYS_connect
+  mov rdi, fd
+  mov rsi, addr
+  mov rdx, addrlen
+  syscall
 }
 
 ; port will be reverse-byte-ordered.

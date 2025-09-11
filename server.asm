@@ -5,10 +5,10 @@ include "./buff.inc"
 include "./program.inc"
 include "./network.inc"
 
+extrn asm_printf
 section '.text' executable
 public _start
 _start:
-  extrn asm_printf
   label sock qword at rbp-8
   label newsock qword at rbp-16
 
@@ -35,7 +35,13 @@ _start:
   socket AF_INET, SOCK_STREAM, 0
   mov [sock], rax
   cmp [sock], -1
-  je .cleanup
+  jne @f
+  mov rdi, STDOUT
+  mov rsi, open_sock_err_msg
+  mov rdx, open_sock_err_msg.len
+  call asm_printf
+  jmp .cleanup
+@@:
   
   ; dunno why the macro crashes here.
   mov rcx, [sock]
@@ -45,8 +51,8 @@ _start:
   call asm_printf
 
   bind [sock], server_sockaddr, server_sockaddr.len
-  cmp rax, -1
-  jne @f
+  cmp rax, 0
+  je @f
   mov rcx, [sock]
   mov rdi, STDOUT
   mov rsi, bind_sock_err_msg
@@ -87,12 +93,11 @@ _start:
 .cleanup:
   cmp [sock], -1
   je @f
-  close rax
-@@:
-  ; requirements: r12 return code, r13 socket fd.
-  ; print random shits
-  call_printf STDOUT, printf_test_str, printf_test_str.len, \
+  call_printf [newsock], printf_test_str, printf_test_str.len, \
   69, -89, -20, 15, 16, 31
+  close [sock]
+  close [newsock]
+@@:
   exit r12
 
 section '.data'
